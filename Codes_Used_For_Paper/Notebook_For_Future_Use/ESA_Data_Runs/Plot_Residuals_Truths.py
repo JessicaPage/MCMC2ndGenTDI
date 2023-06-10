@@ -5,20 +5,41 @@
 
 
 import sys
+#from mpmath import binomial,log,pi,ceil
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 from scipy.signal import kaiser,kaiser_beta
+#from mpmath import *
 import time
 from scipy.stats import norm
+#from astropy import constants as const
 import numpy as np
+#from scipy.signal import butter,filtfilt
+#from scipy.special import gamma,binom,comb
+#import h5py   
+#import nexusformat.nexus as nx
+#from lisaconstants import GM_SUN,c,ASTRONOMICAL_YEAR,ASTRONOMICAL_UNIT,SUN_SCHWARZSCHILD_RADIUS,OBLIQUITY # Constant values set below to avoid importing lisaconstant
+#import emcee
 from dynesty import utils as dyfunc
 import dynesty
+#from dynesty import DynamicNestedSampler
+#import mpld3
+#mpld3.enable_notebook()
 from matplotlib import rc
 import matplotlib as mpl
 
+#from sincinterpol import interp
+#from shift_roll import roll_zeropad
+#import scipy.sparse as sp
+#import bottleneck as bn
+#from numba import jit
+#import timeit
 
 
+# # CREATING FILTERS
+
+# In[2]:
 
 
 # # CREATING FILTERS
@@ -33,7 +54,9 @@ def difference_operator_powers(data):
 
     difference_coefficients = np.zeros((number_n+1,length))
     difference_coefficients[0] = data
-
+    #delta_one = np.roll(data,1)
+    #delta_one[0] = 0.0
+    #difference_coefficients[1] = data-delta_one
     
     for i in np.arange(1,number_n+1):
         sum_for_this_power = np.zeros(length)
@@ -49,9 +72,18 @@ def difference_operator_powers(data):
     return difference_coefficients.T
 
 
+# In[ ]:
+
+
+
+
+
+# In[3]:
+
 
 def filters_lagrange_2_0(D):
 
+    #start_time = time.process_time()
     D=D*f_samp
     integer_part, d_frac = np.divmod(D,1)
 
@@ -60,9 +92,11 @@ def filters_lagrange_2_0(D):
 
     delay_polynomials = np.ones((number_n+1,length))
 
+    #factors = np.array([-1*d_frac+i for i in ints])
     factors = -1*d_frac+ints
 
     delay_polynomials[1:number_n+1] = np.cumprod(factors,axis=0)
+    #print("--- %s seconds for filters lagrange---" % (time.process_time() - start_time))
 
     return delay_polynomials,int(integer_part[0])
 
@@ -76,8 +110,15 @@ def trim_data(data,filter_array):
     data=np.roll(data,filter_array[1],axis=0)
     data[:filter_array[1]] = 0.0
     val = np.einsum('ij,ji->i',data,filter_array[0],optimize=einsum_path_to_use[0])
+    #val =  np.einsum('ij,ji->i',data,filter_array[0],optimize=einsum_path_to_use)
+    #val = np.einsum('ij,ji->i',np.concatenate((np.zeros((filter_array[1],number_n+1)),data),axis=0)[:-filter_array[1]:],filter_array[0],optimize=einsum_path_to_use)
 
     return val
+    #return np.einsum('ij,ji->i',np.concatenate((np.zeros((filter_array[1],number_n+1)),data),axis=0)[:-filter_array[1]:],filter_array[0],optimize=einsum_path_to_use)
+
+    #print("--- %s seconds for trim_data---" % (time.process_time() - start_time))
+
+
 
 
 def S_y_proof_mass_new_frac_freq(f):
@@ -93,55 +134,132 @@ def S_y_OMS_frac_freq(f):
     op_here =  np.power(1.5e-11,2)*np.power(2*np.pi*f/c,2)*(1+np.power(2.0e-3/f,4))
     return op_here
 
+# In[7]:
 
+
+#@jit(numba.types.float64(numba.types.float64),nopython=True)
+#@jit(nopython=True)
+
+
+
+
+#@jit(nopython=True)
 def orbital_parameters(semi_major,inclination):
+    #alpha = L_arm/(2.0*semi_major)
+    #nu = np.pi/3.0 + delta*alpha
+    #eccentricity = np.sqrt(1.0 + 4.0*alpha*np.cos(nu)/np.sqrt(3.0) + 4.0*alpha**2/3.0) - 1.0
 
     orbital_freq=np.sqrt(GM_SUN/semi_major**3)
+    '''
+    tan_inclination = alpha*np.sin(nu)/(np.sqrt(3.0)/2.0 + alpha*np.cos(nu))
+    cos_inclination = 1.0 / np.sqrt(1.0 + tan_inclination**2)
+    sin_inclination = tan_inclination*cos_inclination
+    '''
+	#tan_inclination = np.tan(inclination)
     cos_inclination = np.cos(inclination)
     sin_inclination = np.sin(inclination)
 
     return orbital_freq,cos_inclination,sin_inclination
 
 
+# In[15]:
 
+
+#@jit(numba.types.float64[:,:](numba.types.float64[:],numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64),nopython=True)
+#@jit(nopython=True,parallel=True)
 def s_c_positions(psi_here,eccentricity,cos_inclination,sin_inclination,semi_major,orbital_freq,omega,arg_per,k):
-
+	#lambda_k = omega_1 + theta(k) + arg_per
+	#print('k')
+	#print(eccentricity)
 	lambda_k = omega  + arg_per
 	zeta_t = semi_major*(np.cos(psi_here) - eccentricity)
 	eta_t = semi_major*np.sqrt(1.0-eccentricity**2)*np.sin(psi_here)
+	#psi_here = psi(m_init1,eccentricity,orbital_freq,k,t)
 	positions = np.empty((3,length))
 	
 	positions[0] = (np.cos(omega)*np.cos(arg_per) - np.sin(omega)*np.sin(arg_per)*cos_inclination)*zeta_t - (np.cos(omega)*np.sin(arg_per) + np.sin(omega)*np.cos(arg_per)*cos_inclination)*eta_t #x(t)
 	positions[1] = (np.sin(omega)*np.cos(arg_per) + np.cos(omega)*np.sin(arg_per)*cos_inclination)*zeta_t - (np.sin(omega)*np.sin(arg_per) - np.cos(omega)*np.cos(arg_per)*cos_inclination)*eta_t #y(t)
 	positions[2] = np.sin(arg_per)*sin_inclination*zeta_t + np.cos(arg_per)*sin_inclination*eta_t #z(t)
+	'''
+	xref = semi_major*cos_inclination*(np.cos(psi_here)-eccentricity)
+	yref = semi_major*np.sqrt(1.0-eccentricity**2)*np.sin(psi_here )
+	zref = -1*semi_major*sin_inclination*(np.cos(psi_here)-eccentricity)
 
+	x_t = np.cos(lambda_k)*xref - np.sin(lambda_k)*yref
+	y_t = np.sin(lambda_k)*xref + np.cos(lambda_k)*yref
+
+	positions[0] = x_t
+	positions[1] = y_t
+	positions[2] = zref
+	'''
 	return positions
 
+    #return np.array([x_t,y_t,zref])
+
+
+# In[16]:
+
+
+#@jit(nopython=True,parallel=True)
+#@jit(numba.types.float64[:,:](numba.types.float64[:],numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64,numba.types.float64),nopython=True)
 
 def s_c_velocities(psi_here,eccentricity,cos_inclination,sin_inclination,semi_major,orbital_freq,omega,arg_per,k):
+	#psi_here = psi(m_init1,eccentricity,orbital_freq,k,t)
 
 	psi_dot = orbital_freq/(1.0-eccentricity*np.cos(psi_here))
+	#psi_dot = np.gradient(psi_here,1/f_s,edge_order=2)
 
+	#print('k')
+	#print(eccentricity)
 	lambda_k = omega  + arg_per
 	zeta_t = semi_major*(np.cos(psi_here) - eccentricity)
 	d_zeta_t = -1*semi_major*np.sin(psi_here)*psi_dot
 	eta_t = semi_major*np.sqrt(1.0-eccentricity**2)*np.sin(psi_here)
 	d_eta_t = semi_major*np.sqrt(1.0-eccentricity**2)*np.cos(psi_here)*psi_dot
+	#psi_here = psi(m_init1,eccentricity,orbital_freq,k,t)
 	velocities = np.empty((3,length))
 
 	velocities[0] = (np.cos(omega)*np.cos(arg_per) - np.sin(omega)*np.sin(arg_per)*cos_inclination)*d_zeta_t - (np.cos(omega)*np.sin(arg_per) + np.sin(omega)*np.cos(arg_per)*cos_inclination)*d_eta_t #x(t)
 	velocities[1] = (np.sin(omega)*np.cos(arg_per) + np.cos(omega)*np.sin(arg_per)*cos_inclination)*d_zeta_t - (np.sin(omega)*np.sin(arg_per) - np.cos(omega)*np.cos(arg_per)*cos_inclination)*d_eta_t #y(t)
 	velocities[2] = np.sin(arg_per)*sin_inclination*d_zeta_t + np.cos(arg_per)*sin_inclination*d_eta_t #z(t)
+	'''
+	vxref = -1.0*semi_major*psi_dot*cos_inclination*np.sin(psi_here)
+	vyref = semi_major*psi_dot*np.sqrt(1.0-eccentricity**2)*np.cos(psi_here)
+	vzref = semi_major*psi_dot*sin_inclination*np.sin(psi_here)
 
+	#lambda_k = omega_1 + theta(k) + arg_per
+	lambda_k = omega_1 + arg_per
+
+
+	vx = np.cos(lambda_k)*vxref - np.sin(lambda_k)*vyref
+	vy = np.sin(lambda_k)*vxref + np.cos(lambda_k)*vyref
+	velocities[0] = vx
+	velocities[1] = vy
+	velocities[2] = vzref
+	'''
 	return velocities
+    #return np.array([vx,vy,vzref])
+
+    #return np.array([vx,vy,vzref])
+
+
+# In[10]:
+
+
+#@jit(nopython=True,cache=True)
+#@jit(numba.types.float64[:](numba.types.float64[:],numba.types.float64,numba.types.float64),nopython=True)
 
 def s_c_accelerations(position_here,semi_major,orbital_freq):
+    #position_here = s_c_positions(m_init1,eccentricity,cos_inclination,sin_inclination,semi_major,orbital_freq,k,t)
     
+    #return -1*np.power(semi_major,3)*orbital_freq**2*position_here/np.power(np.linalg.norm(position_here,axis=0),3)
     return -1.0*np.power(semi_major,3)*orbital_freq**2*position_here/np.power(np.sqrt(position_here[0]**2+position_here[1]**2+position_here[2]**2),3)
 
 
 
 def shapiro(pos_i,pos_j):
+    #return 2*GM_SUN/(c**2)*np.log((np.linalg.norm(pos_j,axis=0)+np.linalg.norm(pos_i,axis=0)+np.linalg.norm(pos_j-pos_i,axis=0))\
+                                                         #/(np.linalg.norm(pos_j,axis=0)+np.linalg.norm(pos_i,axis=0)-np.linalg.norm(pos_j-pos_i,axis=0)))
 
     mag_pos_j = np.sqrt(pos_j[0]**2+pos_j[1]**2+pos_j[2]**2)     
     mag_pos_i = np.sqrt(pos_i[0]**2+pos_i[1]**2+pos_i[2]**2)    
@@ -153,6 +271,7 @@ def shapiro(pos_i,pos_j):
 
 
 def psi(m_init1,eccentricity,orbital_freq,k,t):
+    #m = m_init1 + orbital_freq*(t-t_init) - theta(k)
     m = m_init1 + orbital_freq*(t-t_init)
 
     psi_return = m + (eccentricity-np.power(eccentricity,3)/8.0)*np.sin(m) + 0.5*eccentricity**2*np.sin(2.0*m)  + 3.0/8*np.power(eccentricity,3)*np.sin(3.0*m)
@@ -161,18 +280,29 @@ def psi(m_init1,eccentricity,orbital_freq,k,t):
         psi_return -= error / (1.0 - eccentricity * np.cos(psi_return)) 
 
     return psi_return
+    #psi_one = psi_zero - (psi_zero - eccentricity*np.sin(psi_zero) - m)/(1 - eccentricity*np.cos(psi_zero))
+    #return psi_one
+    #return psi_one - (psi_one - eccentricity*np.sin(psi_one) - m)/(1 - eccentricity*np.cos(psi_one))
 
 
+# In[20]:
 def theta(k):
     return 2.0*np.pi*(k-1)/3.0
 
 def delta_tau(psi_here,m_init1,eccentricity,orbital_freq,semi_major,k,t):
+    #psi_here = psi(m_init1,eccentricity,orbital_freq,k,t)
     psi_here_init = psi(m_init1,eccentricity,orbital_freq,k,t_init)
 
     return -3.0/2.0*(orbital_freq*semi_major/c)**2*(t-t_init) - 2.0*(orbital_freq*semi_major/c)**2*eccentricity/orbital_freq*(np.sin(psi_here)-np.sin(psi_here_init))
 
 
 
+
+
+# In[14]:
+
+#@jit(nopython=True,parallel=True)
+#@numba.cfunc("double(double)")
 def time_dependence(m_init1,semi_major,eccentricity,inclination,omega_init,arg_per):
 
 
@@ -181,7 +311,12 @@ def time_dependence(m_init1,semi_major,eccentricity,inclination,omega_init,arg_p
 		mprs = np.empty((6,length))
 
 	orbital_freq,cos_inclination,sin_inclination = orbital_parameters(semi_major,inclination)
-
+	'''
+	print('cos_inclination')
+	print(cos_inclination)
+	print('orbital_freq')
+	print(orbital_freq)
+	'''
 	for i,k,z in zip(np.arange(6),np.array([2,3,3,1,1,2]),np.array([3,2,1,3,2,1])):
 		psi_i = psi(m_init1[z-1],eccentricity[z-1],orbital_freq[z-1],z,tcb_times[z-1])
 		psi_j = psi(m_init1[k-1],eccentricity[k-1],orbital_freq[k-1],k,tcb_times[z-1])
@@ -219,13 +354,16 @@ def time_dependence(m_init1,semi_major,eccentricity,inclination,omega_init,arg_p
 		
 		'''
 		Dij = position_i-position_j
-	
+		#print('Dij')
+		#print(Dij)
 
 		magDij = np.sqrt(Dij[0]**2+Dij[1]**2+Dij[2]**2)
-
+		#print('magDij')
+		#print(magDij/c)
 
 		velocity_j = s_c_velocities(psi_j,eccentricity[k-1],cos_inclination[k-1],sin_inclination[k-1],semi_major[k-1],orbital_freq[k-1],omega_init[k-1],arg_per[k-1],k)
-
+		#print('position_j')
+		#print(position_j)
 		'''
 		velocity_i = np.empty((3,length))
 		for n,m in enumerate(position_i):
@@ -252,8 +390,44 @@ def time_dependence(m_init1,semi_major,eccentricity,inclination,omega_init,arg_p
 		#print(i)
 		#print(delay_in_time[i])
 		if is_tcb==False:
+			'''
+			psi_j = psi(m_init1[k-1],eccentricity[k-1],orbital_freq[k-1],k,tcb_times[z-1]-delay_in_time[i])
+			position_j = s_c_positions(psi_j,eccentricity[k-1],cos_inclination[k-1],sin_inclination[k-1],semi_major[k-1],orbital_freq[k-1],omega_init[k-1],arg_per[k-1],k)
+			velocity_j = np.gradient(position_j,1/f_s,axis=1)
 
+			mag_pos_j = np.sqrt(position_j[0]**2+position_j[1]**2+position_j[2]**2)     
+			mag_pos_i = np.sqrt(position_i[0]**2+position_i[1]**2+position_i[2]**2)  
+			mag_v_i = np.sqrt(velocity_i[0]**2+velocity_i[1]**2+velocity_i[2]**2)
+			mag_v_j = np.sqrt(velocity_j[0]**2+velocity_j[1]**2+velocity_j[2]**2)
 
+			#tau_i_integrand =  -1.0*GM_SUN/(2.0*mag_pos_i*c**2) - mag_v_i**2/(2.0*c**2)
+			#tau_j_integrand =  -1.0*GM_SUN/(2.0*mag_pos_j*c**2) - mag_v_j**2/(2.0*c**2)
+			
+			tau_i_integrand  = -0.5 * (SUN_SCHWARZSCHILD_RADIUS / mag_pos_i + mag_v_i**2 / c**2)
+			tau_j_integrand  = -0.5 * (SUN_SCHWARZSCHILD_RADIUS / mag_pos_j + mag_v_j**2 / c**2)
+			
+			print('tau_i_integrand')
+			print(tau_i_integrand)
+			print('tau_j_integrand')
+			print(tau_j_integrand)
+			print('tau_i_integrand*z-1')
+			print(tau_i_integrand*tcb_times[z-1])
+			
+			d_tau_i = np.cumsum(tau_i_integrand)*1.0/f_s
+
+			d_tau_j = np.cumsum(tau_j_integrand)*1.0/f_s
+			
+			#d_tau_i = tau_i_integrand*tcb_times[z-1]
+			#d_tau_j = tau_j_integrand*(tcb_times[z-1]+delay_in_time[i])
+			
+			print('d_tau_i')
+			print(d_tau_i)
+			print('d_tau_j')
+			print(d_tau_j)
+			#mprs[i] = delay_in_time[i]+ delta_tau(psi_i,m_init1[z-1],eccentricity[z-1],orbital_freq[z-1],semi_major[z-1],z,tcb_times[z-1]) - delta_tau(psi_j,m_init1[k-1],eccentricity[k-1],orbital_freq[k-1],semi_major[k-1],k,tcb_times[z-1] - delay_in_time[i])
+			mprs[i] = delay_in_time[i] +  d_tau_i - d_tau_j
+			#mprs[i] = tcb_times[z-1]-delay_in_time[i]
+			'''
 			mprs[i] = delay_in_time[i]+ delta_tau(psi_i,m_init1[z-1],eccentricity[z-1],orbital_freq[z-1],semi_major[z-1],z,tcb_times[z-1]) - delta_tau(psi_j,m_init1[k-1],eccentricity[k-1],orbital_freq[k-1],semi_major[k-1],k,tcb_times[z-1] - delay_in_time[i])
 			
 			#print(mprs[i])
@@ -265,6 +439,9 @@ def time_dependence(m_init1,semi_major,eccentricity,inclination,omega_init,arg_p
 
 
 
+
+#Eq. (**) on page 1100 of notes
+#@jit(cache=True)
 def nested_delay_application(delay_array_here,list_delays):
     number_delays = len(list_delays)
     
@@ -286,14 +463,25 @@ def nested_delay_application(delay_array_here,list_delays):
     commutative_sum = np.sum(delays,axis=0)
 
 
+    #print("--- %s seconds for linear delay application---" % (time.process_time() - start_time))
 
     return commutative_sum, np.gradient(commutative_sum,1/f_s), correction_factor
+    #return commutative_sum, 0.0, correction_factor
+
+    #return commutative_sum, doppler_factor, correction_factor
 
 
 
+
+# In[23]:
+
+
+#@jit(nopython=True,parallel=True,fastmath=True,cache=True)
 def x_combo_2_0(delay_array):
 
 
+    #delay_array = np.zeros((6,length))
+    #four_delays_needed = time_dependence([0,[0,['2','orbital','x')
     L12 = nested_delay_application(delay_array,np.array([5]))
     L12_L21 = nested_delay_application(delay_array,np.array([5,4]))
     L12_L21_L13 = nested_delay_application(delay_array,np.array([5,4,2]))
@@ -517,7 +705,7 @@ def y_combo_2_0(delay_array):
     return [np.real(y_f),np.imag(y_f)]
 
 
-
+# In[25]:
 
 
 def z_combo_2_0(delay_array):
@@ -633,6 +821,7 @@ def z_combo_2_0(delay_array):
 
 
 
+# In[19]:
 
 
 def covariance_equal_arm(f,Sy_OP,Sy_PM):
@@ -643,6 +832,10 @@ def covariance_equal_arm(f,Sy_OP,Sy_PM):
     return 2*a,2*b_
 
 
+# In[20]:
+
+
+#@jit(nopython=True,parallel=True,cache=True)
 def likelihood_analytical_equal_arm(x,y,z):
 	
 
@@ -650,6 +843,7 @@ def likelihood_analytical_equal_arm(x,y,z):
 	plt.loglog(f_band,np.power(np.abs(x[0]+x[1]),2),label=r'$X_{2}$',color='orange')
 	plt.loglog(f_band,np.power(np.abs(y[0]+y[1]),2),label=r'$Y_{2}$',color='purple')
 	plt.loglog(f_band,np.power(np.abs(z[0]+z[1]),2),label=r'$Z_{2}$',color='green')
+	#plt.loglog(f_band, np.power((2 * np.pi * f_band) * asd_nu * 9e-12/central_freq,2), c='gray', ls='--')
 	plt.loglog(f_band,a,label=r'$\Sigma_{00}$',color='grey',linestyle='--')
 	plt.xlabel(r'f (Hz)')
 	plt.ylabel(r'PSD (Hz/Hz)')
@@ -690,7 +884,14 @@ def likelihood_value(state_current):
 	omega_init =np.array([state_current[12],state_current[13],state_current[14]])
 	arg_per = np.array([state_current[15],state_current[16],state_current[17]])
 	
-
+	'''
+	semi_major = np.array([state_current_0,state_current_1,state_current_2])
+	eccentricity = np.array([state_current_3,state_current_4,state_current_5])
+	inclination = np.array([state_current_6,state_current_7,state_current_8])
+	m_init1 = np.array([state_current_9,state_current_10,state_current_11])
+	omega_init =np.array([state_current_12,state_current_13,state_current_14])
+	arg_per  = np.array([state_current_15,state_current_16,state_current_17])
+	'''
 	delays_in_time =time_dependence(m_init1,semi_major,eccentricity,inclination,omega_init,arg_per)
 
 
@@ -700,7 +901,9 @@ def likelihood_value(state_current):
 
 	likelihood,chi_2_here = likelihood_analytical_equal_arm(x_combo,y_combo,z_combo)
 
+	#prior = prior_minit1(m_init1)*prior_semi_major(semi_major)*prior_omega(omega_init)*prior_arg_per(arg_per)*prior_eccentricity(eccentricity)*prior_inclination(inclination)
 
+	#return model.log_prob(rate=rate, obs=poisson_samples) 
 	return likelihood 
 		  
 def prior_transform(state_current):
