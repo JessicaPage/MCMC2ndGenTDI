@@ -16,7 +16,7 @@ class BayesTDI():
 		data_file: File containing the LISA measurements with column headers 'sij', 'tauij',
 			'epsij' for measurements received on S/C i from S/C j and well as truth values for S/C 
 			separations Lij as 'mprs_ij'. Data generation code with correct header names is given in 
-			'generate_data_ESA.ipynb'.
+			'generate_data_ESA.ipynb' for LISA Instrument simulation used with ESA Orbits in LISA Orbits.
 		cut_off(int): Number of samples to remove at beginning. Make sure it corresponds 
 			to sample you quote in elements_from_Cartesian.ipynb if using ESA (numerical) orbit
 			model for data simulation.
@@ -57,34 +57,40 @@ class BayesTDI():
 		self.Nsamples = Nsamples
 		self.chainfile = chainfile
 		
-		elements_data = np.genfromtxt(self.orbital_elements_file)
+		if self.orbit_model=='esa':
+		
+			elements_data = np.genfromtxt(self.orbital_elements_file)
 
 
-		initial_state_truth = np.array([elements_data[0],elements_data[1],elements_data[2],elements_data[3],elements_data[4],elements_data[5],elements_data[6],elements_data[7],elements_data[8],elements_data[9],elements_data[10],elements_data[11],elements_data[12],elements_data[13],elements_data[14],elements_data[15],elements_data[16],elements_data[17]])
-		#initial_state_truth = np.array([elements_data[0],elements_data[1],elements_data[2],elements_data[3],elements_data[4],elements_data[5],elements_data[6],elements_data[7],elements_data[8],elements_data[9],elements_data[10],elements_data[11],elements_data[15],elements_data[16],elements_data[17]])
+			initial_state_truth = np.array([elements_data[0],elements_data[1],elements_data[2],elements_data[3],elements_data[4],elements_data[5],elements_data[6],elements_data[7],elements_data[8],elements_data[9],elements_data[10],elements_data[11],elements_data[12],elements_data[13],elements_data[14],elements_data[15],elements_data[16],elements_data[17]])
+			#initial_state_truth = np.array([elements_data[0],elements_data[1],elements_data[2],elements_data[3],elements_data[4],elements_data[5],elements_data[6],elements_data[7],elements_data[8],elements_data[9],elements_data[10],elements_data[11],elements_data[15],elements_data[16],elements_data[17]])
 
 
 
 
-		self.initial_state = np.array([np.random.uniform(elements_data[0]-1.0e-1,elements_data[0]+1.0e-1,size=self.Nens),np.random.uniform(elements_data[1]-1.0e-1,elements_data[1]+1.0e-1,size=self.Nens),np.random.uniform(elements_data[2]-1.0e-1,elements_data[2]+1.0e-1,size=self.Nens),np.random.uniform(elements_data[3]-1.0e-9,elements_data[3]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[4]-1.0e-9,elements_data[4]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[5]-1.0e-9,elements_data[5]+1.0e-9,size=self.Nens),\
-						np.random.uniform(elements_data[6]-1.0e-9,elements_data[6]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[7]-1.0e-9,elements_data[7]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[8]-1.0e-9,elements_data[8]+1.0e-9,size=self.Nens), np.random.uniform(elements_data[9]-1.0e-9,elements_data[9]+1.0e-9,size=self.Nens), np.random.uniform(elements_data[10]-1.0e-9,elements_data[10]+1.0e-9,size=self.Nens), np.random.uniform(elements_data[11]-1.0e-9,elements_data[11]+1.0e-9,size=self.Nens),\
-						np.random.uniform(elements_data[12]-1.0e-9,elements_data[12]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[13]-1.0e-9,elements_data[13]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[14]-1.0e-9,elements_data[14]+1.0e-9,size=self.Nens),\
-						np.random.uniform(elements_data[15]-1.0e-9,elements_data[15]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[16]-1.0e-9,elements_data[16]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[17]-1.0e-9,elements_data[17]+1.0e-9,size=self.Nens)])
+			self.initial_state = np.array([np.random.uniform(elements_data[0]-1.0e-1,elements_data[0]+1.0e-1,size=self.Nens),np.random.uniform(elements_data[1]-1.0e-1,elements_data[1]+1.0e-1,size=self.Nens),np.random.uniform(elements_data[2]-1.0e-1,elements_data[2]+1.0e-1,size=self.Nens),np.random.uniform(elements_data[3]-1.0e-9,elements_data[3]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[4]-1.0e-9,elements_data[4]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[5]-1.0e-9,elements_data[5]+1.0e-9,size=self.Nens),\
+							np.random.uniform(elements_data[6]-1.0e-9,elements_data[6]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[7]-1.0e-9,elements_data[7]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[8]-1.0e-9,elements_data[8]+1.0e-9,size=self.Nens), np.random.uniform(elements_data[9]-1.0e-9,elements_data[9]+1.0e-9,size=self.Nens), np.random.uniform(elements_data[10]-1.0e-9,elements_data[10]+1.0e-9,size=self.Nens), np.random.uniform(elements_data[11]-1.0e-9,elements_data[11]+1.0e-9,size=self.Nens),\
+							np.random.uniform(elements_data[12]-1.0e-9,elements_data[12]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[13]-1.0e-9,elements_data[13]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[14]-1.0e-9,elements_data[14]+1.0e-9,size=self.Nens),\
+							np.random.uniform(elements_data[15]-1.0e-9,elements_data[15]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[16]-1.0e-9,elements_data[16]+1.0e-9,size=self.Nens),np.random.uniform(elements_data[17]-1.0e-9,elements_data[17]+1.0e-9,size=self.Nens)])
 
 
-		self.initial_state=self.initial_state.T
-		self.ndims = self.initial_state.shape[1]
+			self.initial_state=self.initial_state.T
+			self.ndims = self.initial_state.shape[1]
 
-		self.initial_state = np.vstack([self.initial_state, initial_state_truth])
+			self.initial_state = np.vstack([self.initial_state, initial_state_truth])
 
-		self.Nens+=1
+			self.Nens+=1
 
-		self.semi_major_0=np.array([elements_data[0],elements_data[1],elements_data[2]])
-		self.eccentricity_0 = np.array([elements_data[3],elements_data[4],elements_data[5]])
-		self.inclination_0 = np.array([elements_data[6],elements_data[7],elements_data[8]])
-		self.m_init1_0 =np.array([elements_data[9],elements_data[10],elements_data[11]])
-		self.omega_init_0 = np.array([elements_data[12],elements_data[13],elements_data[14]])
-		self.arg_per_0 = np.array([elements_data[15],elements_data[16],elements_data[17]])
+			self.semi_major_0=np.array([elements_data[0],elements_data[1],elements_data[2]])
+			self.eccentricity_0 = np.array([elements_data[3],elements_data[4],elements_data[5]])
+			self.inclination_0 = np.array([elements_data[6],elements_data[7],elements_data[8]])
+			self.m_init1_0 =np.array([elements_data[9],elements_data[10],elements_data[11]])
+			self.omega_init_0 = np.array([elements_data[12],elements_data[13],elements_data[14]])
+			self.arg_per_0 = np.array([elements_data[15],elements_data[16],elements_data[17]])
+			
+		else:
+			print("Keplerian orbiot model parameterization still in progress.")
+			
 		
 	def run_zeus_mcmc(self,einsum_path_to_use):
 		"""The current sampler for realistic numerical LISA orbits. Currently uses the 
@@ -160,4 +166,4 @@ einsum_path_to_use = b1.get_einsum_path()
 if b1.orbit_model=='esa':
 	b1.run_zeus_mcmc(einsum_path_to_use)
 else:
-	print('havent implemented Keplerian parameterization here yet.')
+	print('havent implemented Keplerian orbit model parameterization here yet.')
