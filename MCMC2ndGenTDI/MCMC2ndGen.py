@@ -87,9 +87,9 @@ class BayesTDI():
 		self.arg_per_0 = np.array([elements_data[15],elements_data[16],elements_data[17]])
 		
 	def run_zeus_mcmc(self,einsum_path_to_use):
-		"""The sampler. Currently uses the Zeus ensemble sampler. Sampling data generated with 
-		realistic LISA orbits using the 18 parameter model is a work in progress. This 
-		method is the status so far.
+		"""The current sampler for realistic numerical LISA orbits. Currently uses the 
+		Zeus ensemble sampler. Sampling data generated with realistic LISA orbits using 
+		the 18 parameter model is a work in progress. This method using Zeus is the status so far.
 		
 		Arg: 
 		
@@ -126,7 +126,14 @@ class BayesTDI():
 
 
 	def get_einsum_path(self):
-	
+		"""Run this once before beginning the MCMC run. Calculates the optimum einsum 
+		path for NumPy einsum in FDI filter functions.
+		
+		Returns: 
+		
+		einsum_path_to_use: speeds up NumPy einsum in FDI filter by finding optimum path. 
+		See np.einsum docs for options if not calling get_einsum_path() here.
+		"""	
 
 		import settings
 		settings.init(self.data_file,self.f_s,self.number_n,self.cut_off,self.t_init,self.central_freq,self.f_min,self.f_max,self.tcb)  
