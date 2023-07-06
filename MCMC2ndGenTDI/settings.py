@@ -50,6 +50,7 @@ def covariance_equal_arm(f,Sy_OP,Sy_PM):
 
 def init(data_file,fs,numbern,cut_off,tinit,central_freq,f_min,f_max,tcb):
 
+	global L_arm
 	L_arm = 2.5e9
 	global avg_L
 	avg_L = L_arm/c
@@ -244,3 +245,14 @@ def init(data_file,fs,numbern,cut_off,tinit,central_freq,f_min,f_max,tcb):
 	low_inclination = 0.39*np.pi/180.0
 	global high_inclination 
 	high_inclination = 0.6*np.pi/180.0
+	
+	global delta
+	delta = 5.0/8.0 
+	
+	global Omega_1
+	Omega_1 = np.pi/2.0
+	
+	global AU
+	AU = ASTRONOMICAL_UNIT
+	
+

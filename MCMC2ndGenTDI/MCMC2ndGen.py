@@ -57,6 +57,8 @@ class BayesTDI():
 		self.Nsamples = Nsamples
 		self.chainfile = chainfile
 		
+		import settings
+		settings.init(self.data_file,self.f_s,self.number_n,self.cut_off,self.t_init,self.central_freq,self.f_min,self.f_max,self.tcb)  
 		if self.orbit_model=='esa':
 		
 			elements_data = np.genfromtxt(self.orbital_elements_file)
@@ -88,8 +90,20 @@ class BayesTDI():
 			self.omega_init_0 = np.array([elements_data[12],elements_data[13],elements_data[14]])
 			self.arg_per_0 = np.array([elements_data[15],elements_data[16],elements_data[17]])
 			
+		elif self.orbit_model=='keplerian':
+			from delay_time_dependence_Keplerian import time_dependence
+			self.arg_per_0 = -np.pi/2.0
+			self.semi_major_0=settings.ASTRONOMICAL_UNIT
+			self.m_init1_0 = 0.0
+			self.initial_delays_in_time = time_dependence(self.m_init1_0,self.semi_major_0,self.arg_per_0)
+
+			#initial_state_truth = np.array([elements_data[0],elements_data[1],elements_data[2],elements_data[3],elements_data[4],elements_data[5],elements_data[6],elements_data[7],elements_data[8],elements_data[9],elements_data[10],elements_data[11],elements_data[12],elements_data[13],elements_data[14],elements_data[15],elements_data[16],elements_data[17]])
+			self.initial_state_truth = np.array([self.m_init1_0,self.semi_major_0,self.arg_per_0])
+
+			
 		else:
-			print("Keplerian orbiot model parameterization still in progress.")
+		
+			print("Invalid orbit model.")
 			
 		
 	def run_zeus_mcmc(self,einsum_path_to_use):
@@ -105,8 +119,7 @@ class BayesTDI():
 		import time
 		import zeus
 		from multiprocessing import Pool
-		import settings
-		settings.init(self.data_file,self.f_s,self.number_n,self.cut_off,self.t_init,self.central_freq,self.f_min,self.f_max,self.tcb)  
+
 		from mcmc_functions import target_log_prob_fn
 
 		#........................................................................................
@@ -130,6 +143,100 @@ class BayesTDI():
 
 			print("--- %s seconds using multiprocessing---" % (time.time() - start_time))
 
+	def run_emcee_Keplerian_mcmc(self,einsum_path_to_use):
+		"""The current sampler for realistic KeplerianLISA orbits. Currently uses the 
+		emcee ensemble sampler. Sampling data generated with Keplerian LISA orbits using 
+		the 3 parameter model. 
+		
+		Arg: 
+		
+		einsum_path_to_use: speeds up NumPy einsum in FDI filter by finding optimum path. 
+		See np.einsum docs for options if not calling get_einsum_path() here.
+		"""
+		import time
+		import emcee
+		#import settings
+		#settings.init(self.data_file,self.f_s,self.number_n,self.cut_off,self.t_init,self.central_freq,self.f_min,self.f_max,self.tcb)  
+		from mcmc_functions_Keplerian import target_log_prob_fn
+
+		#........................................................................................
+		#...........................MCMC Portion.......................................
+		#........................................................................................
+
+		start_time = time.time()
+
+		#initial delays accepted into the chain
+		accept = 1
+
+		initial_state = np.array([np.random.uniform(self.m_init1_0-1.0e-5,self.m_init1_0+1.0e-5,size=self.Nens),np.random.uniform(1.49597e+11,1.49598e+11,size=self.Nens),np.random.uniform(self.arg_per_0-1.0e-6,self.arg_per_0+1.0e-6,size=self.Nens)])
+
+		initial_state=initial_state.T
+		self.ndims = initial_state.shape[1]
+
+		initial_state = np.vstack([initial_state,self.initial_state_truth])
+	
+		self.Nens+=1
+
+		self.ndims = initial_state.shape[1]
+
+
+
+		filename = "samples_Keplerian_chain_omega_emcee_backend_testing_small_ball.h5"
+		backend = emcee.backends.HDFBackend(filename)
+		backend.reset(self.Nens, self.ndims)
+		sampler = emcee.EnsembleSampler(self.Nens, self.ndims, target_log_prob_fn,backend=backend,args=[einsum_path_to_use])
+
+		f = open("samples_Keplerian_chain_omega_emcee_testing_small_ball.dat", "w")
+		f.close()
+
+		max_n = self.Nsamples
+
+		# We'll track how the average autocorrelation time estimate changes
+		index_here = 0
+		autocorr = np.empty(max_n)
+
+		# This will be useful to testing convergence
+		old_tau = np.inf
+
+
+
+		for result in sampler.sample(initial_state, iterations=max_n,progress=True):
+			#print('result')
+			#print(result)
+
+			position = result[0]
+			f = open("samples_Keplerian_chain_omega_emcee_testing_small_ball.dat", "a")
+			for k in range(position.shape[0]):
+				f.write("{0:4d} {1:s}\n".format(k, " ".join(map(str,position[k]))))
+			f.close()
+	
+			if sampler.iteration % 100:
+				continue
+	
+			# Compute the autocorrelation time so far
+			# Using tol=0 means that we'll always get an estimate even
+			# if it isn't trustworthy
+			tau = sampler.get_autocorr_time(tol=0)
+			autocorr[index_here] = np.mean(tau)
+			index_here += 1
+
+			# Check convergence
+			converged = np.all(tau * 100 < sampler.iteration)
+			converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+			if converged:
+				break
+			old_tau = tau
+
+		n = 100 * np.arange(1, index_here + 1)
+		y = autocorr[:index_here]
+		plt.plot(n, n / 100.0, "--k")
+		plt.plot(n, y)
+		plt.xlim(0, n.max())
+		plt.ylim(0, y.max() + 0.1 * (y.max() - y.min()))
+		plt.xlabel("number of steps")
+		plt.ylabel(r"mean $\hat{\tau}$")
+		plt.show()
+
 
 	def get_einsum_path(self):
 		"""Run this once before beginning the MCMC run. Calculates the optimum einsum 
@@ -147,7 +254,14 @@ class BayesTDI():
 		from delay_time_dependence import time_dependence
 		from filter_functions import delay_polynomials
 		#Get optimal einsum path]
-		orbital_L_3_p = time_dependence(self.m_init1_0,self.semi_major_0,self.eccentricity_0,self.inclination_0,self.omega_init_0,self.arg_per_0)
+		if self.orbit_model=='esa':
+			from delay_time_dependence import time_dependence
+
+			orbital_L_3_p = time_dependence(self.m_init1_0,self.semi_major_0,self.eccentricity_0,self.inclination_0,self.omega_init_0,self.arg_per_0)
+		elif self.orbit_model=='keplerian':
+			from delay_time_dependence_Keplerian import time_dependence
+			orbital_L_3_p = time_dependence(self.m_init1_0,self.semi_major_0,self.arg_per_0)
+
 		nested = nested_delay_application(orbital_L_3_p,np.array([0,1]))
 		test_filter = delay_polynomials(nested[0])
 		data_to_use_s13 = np.concatenate((np.zeros((test_filter[1],self.number_n+1)),settings.s13_coeffs),axis=0)
@@ -161,9 +275,11 @@ class BayesTDI():
 		return einsum_path_to_use
 
 
-b1 = BayesTDI('LISA_Instrument_ESA_orbits_tcb_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init= 13100.00,f_min= 5.0e-4,f_max = 0.1,orbit_model='esa',orbital_elements_file='elements_from_Cartesian_4_Hz_3600_sec.dat',tcb=True,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
+#b1 = BayesTDI('LISA_Instrument_ESA_orbits_tcb_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init= 13100.00,f_min= 5.0e-4,f_max = 0.1,orbit_model='esa',orbital_elements_file='elements_from_Cartesian_4_Hz_3600_sec.dat',tcb=True,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
+b1 = BayesTDI('LISA_Instrument_ESA_orbits_tcb_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init= 13100.00,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file='elements_from_Cartesian_4_Hz_3600_sec.dat',tcb=True,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
+
 einsum_path_to_use = b1.get_einsum_path()
 if b1.orbit_model=='esa':
 	b1.run_zeus_mcmc(einsum_path_to_use)
 else:
-	print('havent implemented Keplerian orbit model parameterization here yet.')
+	b1.run_emcee_Keplerian_mcmc(einsum_path_to_use)
