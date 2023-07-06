@@ -114,7 +114,7 @@ def time_dependence(m_init1,semi_major,eccentricity,inclination,omega_init,arg_p
 
 		if settings.is_tcb==False:
 
-			mprs[i] = delay_in_time[i]+ delta_tau(psi_i,m_init1[z-1],eccentricity[z-1],orbital_freq[z-1],semi_major[z-1],z,tcb_times[z-1]) - delta_tau(psi_j,m_init1[k-1],eccentricity[k-1],orbital_freq[k-1],semi_major[k-1],k,tcb_times[z-1] - delay_in_time[i])
+			mprs[i] = delay_in_time[i]+ delta_tau(psi_i,m_init1[z-1],eccentricity[z-1],orbital_freq[z-1],semi_major[z-1],z,tcb_times[z-1]) - delta_tau(psi_j,m_init1[k-1],eccentricity[k-1],orbital_freq[k-1],semi_major[k-1],k,settings.tcb_times[z-1] - delay_in_time[i])
 			
 	if settings.is_tcb==True:
 		return delay_in_time
