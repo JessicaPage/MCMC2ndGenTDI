@@ -10,7 +10,7 @@ arguments given to class BayesTDI() as-is in example_mcmc_run.ipynb.
 
     If running numerical orbit model (18-parameter) parameterization:
 
-        generate_data-ESA.ipynb
+        generate_data_numerical.ipynb
         elements_from_Cartesian.ipynb
         example_mcmc_run.ipynb (and follow directions for numerical/esa within)
 
