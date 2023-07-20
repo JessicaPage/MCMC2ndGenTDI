@@ -1,4 +1,4 @@
-#MCMC2ndGen
+# MCMC2ndGen
 
 This generates MCMC samples of parameters to estimate the time-varying LISA spacecraft separations required for laser frequency noise suppression in time-delay interferometry (TDI). See the paper published on the subject [here](https://arxiv.org/abs/2305.14186). The data to sample over is generated with [LISA Instrument and LISA Orbits](https://gitlab.in2p3.fr/lisa-simulation/instrument), so the naming and labeling conventions may look similar to their codes for clarity.
 
@@ -20,4 +20,30 @@ If running numerical orbit model (18-parameter)  parameterization:
 2) elements_from_Cartesian.ipynb
 3) example_mcmc_run.ipynb (and follow directions for numerical/esa within)
 
+## Installation
 
+```
+pip install MCMC2ndGen
+```
+
+## Example Use
+
+```
+from MCMC2ndGen import BayesTDI
+```
+### Create BayesTDI() class instance. Set all arguments here. If running data that used numerical orbit model (18 parameter model) run first example and comment line 2, if running data that used Keplerian model, use second example and comment line 1.
+
+```
+#b1 = BayesTDI('LISA_Instrument_ESA_orbits_tcb_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init= 13100.00,f_min= 5.0e-4,f_max = 0.1,orbit_model='esa',orbital_elements_file='elements_from_Cartesian_4_Hz_3600_sec.dat',tcb=True,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
+b1 = BayesTDI('LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_86400_sec.dat', cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
+```
+### Run either zeus sampler for numerical orbit model data (18-parameter model; still under development for converged posteriors) or the working Keplerian orbit model parameterization.
+
+```
+if b1.orbit_model=='esa':
+    b1.run_zeus_mcmc(einsum_path_to_use)
+elif b1.orbit_model=='keplerian':
+    b1.run_emcee_Keplerian_mcmc(einsum_path_to_use)
+else:
+    print('not a valid orbit model/Lij(t) parameterization option.')
+```
