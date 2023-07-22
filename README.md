@@ -40,7 +40,7 @@ b1 = BayesTDI('LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_86400_sec.dat', 
 ### Run either zeus sampler for numerical orbit model data (18-parameter model; still under development for converged posteriors) or the working Keplerian orbit model parameterization.
 
 ```
-if b1.orbit_model=='esa':
+if b1.orbit_model=='numerical':
     b1.run_zeus_mcmc(einsum_path_to_use)
 elif b1.orbit_model=='keplerian':
     b1.run_emcee_Keplerian_mcmc(einsum_path_to_use)
