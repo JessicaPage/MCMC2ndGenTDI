@@ -251,7 +251,7 @@ class BayesTDI():
 		from delay_time_dependence import time_dependence
 		from filter_functions import delay_polynomials
 		#Get optimal einsum path]
-		if self.orbit_model=='esa':
+		if self.orbit_model=='numerical':
 			from delay_time_dependence import time_dependence
 
 			orbital_L_3_p = time_dependence(self.m_init1_0,self.semi_major_0,self.eccentricity_0,self.inclination_0,self.omega_init_0,self.arg_per_0)
