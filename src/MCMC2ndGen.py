@@ -18,7 +18,11 @@ class BayesTDI():
 			'epsij' for measurements received on S/C i from S/C j and well as truth values for S/C 
 			separations Lij as 'mprs_ij'. Data generation code with correct header names is given in 
 			'generate_data_ESA.ipynb' for LISA Instrument simulation used with ESA Orbits in LISA Orbits
-			or 'generate_data.ipynb' for Keplerian orbits. (default='LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_86400_sec.dat')
+			or 'generate_data.ipynb' for Keplerian orbits.
+			Need file with headers formatted as 'sij' for science measurements, 'tauij' for reference 
+			measurements and 'epsij' for test mass measurements, all three  in frequency fluctuations. 
+			Also need each spacecraft SSB time with headers 'time_one', 'time_two', and 'time_three', along with SSB time 'time'.
+			(default='LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_86400_sec.dat')
 		cut_off(int): Number of samples to remove at beginning. Make sure it corresponds 
 			to sample you quote in elements_from_Cartesian.ipynb if using ESA (numerical) orbit
 			model for data simulation (default=0).
