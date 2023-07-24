@@ -1,8 +1,8 @@
 import numpy as np
 from lisaconstants import c 
-from delay_time_dependence import time_dependence
-from TDI_functions import *
-from filter_functions import *
+from .delay_time_dependence import time_dependence
+from .TDI_functions import *
+from .filter_functions import *
 
 def likelihood_analytical_equal_arm(x,y,z):
 	'''
