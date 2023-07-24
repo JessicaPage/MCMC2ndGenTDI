@@ -122,7 +122,7 @@ class BayesTDI():
 		import time
 		import zeus
 		from multiprocessing import Pool
-		from mcmc_functions import target_log_prob_fn
+		from .utils.mcmc_functions import target_log_prob_fn
 
 		#........................................................................................
 		#...........................MCMC Portion.......................................
@@ -152,7 +152,7 @@ class BayesTDI():
 		"""
 		import time
 		import emcee
-		from mcmc_functions_Keplerian import target_log_prob_fn
+		from .utils.mcmc_functions_Keplerian import target_log_prob_fn
 
 		#........................................................................................
 		#...........................MCMC Portion.......................................
