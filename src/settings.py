@@ -128,18 +128,6 @@ def init(data_file,fs,numbern,cut_off,tinit,central_freq,f_min,f_max,tcb):
 	eps13 = data['eps13'][cut_off::]/central_freq
 
 
-	global ppr_L_1
-	ppr_L_1 = data['mprs_32'][cut_off::]
-	global ppr_L_1_p
-	ppr_L_1_p = data['mprs_23'][cut_off::]
-	global ppr_L_2
-	ppr_L_2 = data['mprs_13'][cut_off::]
-	global ppr_L_2_p
-	ppr_L_2_p = data['mprs_31'][cut_off::]
-	global ppr_L_3
-	ppr_L_3 = data['mprs_21'][cut_off::]
-	global ppr_L_3_p
-	ppr_L_3_p = data['mprs_12'][cut_off::]
 	
 	global length
 	length = len(s31)
