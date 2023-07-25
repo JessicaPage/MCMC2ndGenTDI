@@ -2,7 +2,11 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import pkg_resources
 
+DATA_PATH = pkg_resources.resource_filename('<MCMC2ndGen>', 'data/')		
+print('DATA_PATH')
+print(DATA_PATH)
 
 class BayesTDI():
 
@@ -45,7 +49,7 @@ class BayesTDI():
 		chainfile(str): Name of .dat file storing the samples (default = 'chainfile.dat'). A backend .h5 file is also generated. 
 	"""
 	
-	def __init__(self, data_file='LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_86400_sec.dat', cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000) 
+	def __init__(self, data_file=DATA_PATH+'LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_3600_sec.dat', cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000): 
 		self.f_s = f_s
 		self.number_n = number_n
 		self.cut_off = cut_off
@@ -270,10 +274,9 @@ class BayesTDI():
 
 
 		return einsum_path_to_use
-
+		
 '''
-b1 = BayesTDI('LISA_Instrument_ESA_orbits_tcb_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init= 13100.00,f_min= 5.0e-4,f_max = 0.1,orbit_model='numerical',orbital_elements_file='elements_from_Cartesian_4_Hz_3600_sec.dat',tcb=True,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
-#b1 = BayesTDI('LISA_Instrument_ESA_orbits_tcb_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init= 13100.00,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file='elements_from_Cartesian_4_Hz_3600_sec.dat',tcb=True,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
+b1=BayesTDI()
 
 einsum_path_to_use = b1.get_einsum_path()
 if b1.orbit_model=='esa':
@@ -281,3 +284,4 @@ if b1.orbit_model=='esa':
 else:
 	b1.run_emcee_Keplerian_mcmc(einsum_path_to_use)
 '''
+
