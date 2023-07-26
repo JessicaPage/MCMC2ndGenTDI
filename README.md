@@ -1,4 +1,4 @@
-# MCMC2ndGen
+# MCMC2ndGenTDI
 
 This generates MCMC samples of parameters to estimate the time-varying LISA spacecraft separations required for laser frequency noise suppression in time-delay interferometry (TDI). See the paper published on the subject [here](https://arxiv.org/abs/2305.14186). The data to sample over is generated with [LISA Instrument and LISA Orbits](https://gitlab.in2p3.fr/lisa-simulation/instrument), so the naming and labeling conventions may look similar to their codes for clarity.
 
@@ -23,13 +23,13 @@ If running numerical orbit model (18-parameter)  parameterization:
 ## Installation
 
 ```
-pip install MCMC2ndGen
+pip install MCMC2ndGenTDI
 ```
 
 ## Example Use
 
 ```
-from MCMC2ndGen import BayesTDI
+from MCMC2ndGenTDI.run_mcmc_TDI import BayesTDI
 ```
 ### Create BayesTDI() class instance. Set all arguments here. If running data that used numerical orbit model (18 parameter model) run first example and comment line 2, if running data that used Keplerian model, use second example and comment line 1.
 
