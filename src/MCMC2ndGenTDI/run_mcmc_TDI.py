@@ -1,7 +1,13 @@
 
 import numpy as np
-import pkgutil
+#import pkgutil
 from . import settings
+#import importlib.resources
+#import os
+#from . import data
+
+#data_dir = importlib.resources('mcmc2ndgentdi.data')
+#data_path = os.path.join(data, 'LISA_Instrument_Keplerian_orbits_ppr_orbits_4_Hz_3600_sec.dat')
 
 '''
 DATA_PATH = pkg_resources.resource_filename('<mcmc2ndgentdi>', 'data/')		
@@ -54,6 +60,7 @@ class BayesTDI():
 		chainfile(str): Name of .dat file storing the samples (default = 'chainfile.dat'). A backend .h5 file is also generated. 
 	"""
 	
+	#def __init__(self, data_file=data_path, cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000,chainfile='chainfile.dat'): 
 	def __init__(self, data_file='LISA_Instrument_Keplerian_orbits_ppr_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000,chainfile='chainfile.dat'): 
 		self.f_s = f_s
 		self.number_n = number_n
