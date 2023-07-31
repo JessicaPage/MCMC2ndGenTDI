@@ -35,7 +35,7 @@ from MCMC2ndGenTDI.run_mcmc_TDI import BayesTDI
 
 ```
 #b1 = BayesTDI('LISA_Instrument_ESA_orbits_tcb_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init= 13100.00,f_min= 5.0e-4,f_max = 0.1,orbit_model='esa',orbital_elements_file='elements_from_Cartesian_4_Hz_3600_sec.dat',tcb=True,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
-b1 = BayesTDI('LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_86400_sec.dat', cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
+b1 = BayesTDI('LISA_Instrument_Keplerian_orbits_ppr_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=4.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000)
 ```
 ### Run either zeus sampler for numerical orbit model data (18-parameter model; still under development for converged posteriors) or the working Keplerian orbit model parameterization.
 
