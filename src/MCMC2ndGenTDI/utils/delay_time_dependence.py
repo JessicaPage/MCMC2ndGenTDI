@@ -1,5 +1,5 @@
 import numpy as np
-import ..settings
+from .. import settings
 
 def orbital_parameters(semi_major,inclination):
 

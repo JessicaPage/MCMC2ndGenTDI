@@ -1,6 +1,6 @@
 import numpy as np
 from .filter_functions import delay_polynomials, trim_data
-import ..settings
+from .. import settings
 
 def nested_delay_application(delay_array_here,list_delays):
     number_delays = len(list_delays)

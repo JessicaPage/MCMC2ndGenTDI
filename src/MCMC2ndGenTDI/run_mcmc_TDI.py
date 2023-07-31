@@ -1,12 +1,18 @@
 
-import sys
 import numpy as np
-import pkg_resources
+import pkgutil
+from . import settings
 
-DATA_PATH = pkg_resources.resource_filename('<MCMC2ndGen>', 'data/')		
+'''
+DATA_PATH = pkg_resources.resource_filename('<mcmc2ndgentdi>', 'data/')		
 print('DATA_PATH')
 print(DATA_PATH)
-
+'''
+'''
+default_data_file = pkgutil.get_data("mcmc2ndgentdi.data","LISA_Instrument_Keplerian_orbits_ppr_orbits_4_Hz_3600_sec.dat")
+print('default_data_file')
+print(default_data_file)
+'''
 class BayesTDI():
 
 	"""Class that performs MCMC to estimate the the time-varying spacecraft separations in the LISA mission. 
@@ -48,7 +54,7 @@ class BayesTDI():
 		chainfile(str): Name of .dat file storing the samples (default = 'chainfile.dat'). A backend .h5 file is also generated. 
 	"""
 	
-	def __init__(self, data_file=DATA_PATH+'LISA_Instrument_Keplerian_orbits_ppr_orbits_2_Hz_3600_sec.dat', cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000): 
+	def __init__(self, data_file='LISA_Instrument_Keplerian_orbits_ppr_orbits_4_Hz_3600_sec.dat', cut_off=0,f_s=2.0,t_init=0.0,f_min= 5.0e-4,f_max = 0.1,orbit_model='keplerian',orbital_elements_file=None,tcb=False,number_n=7,Nens = 37,Nburnin = 100,Nsamples = 100000,chainfile='chainfile.dat'): 
 		self.f_s = f_s
 		self.number_n = number_n
 		self.cut_off = cut_off
@@ -63,8 +69,9 @@ class BayesTDI():
 		self.Nburnin = Nburnin
 		self.Nsamples = Nsamples
 		self.chainfile = chainfile
+		self.data_file = data_file
 				
-		import settings
+		
 		settings.init(self.data_file,self.f_s,self.number_n,self.cut_off,self.t_init,self.central_freq,self.f_min,self.f_max,self.tcb)  
 		
 		if self.orbit_model=='numerical':
@@ -97,7 +104,7 @@ class BayesTDI():
 			self.arg_per_0 = np.array([elements_data[15],elements_data[16],elements_data[17]])
 			
 		elif self.orbit_model=='keplerian':
-			from delay_time_dependence_Keplerian import time_dependence
+			from .utils.delay_time_dependence_Keplerian import time_dependence
 			self.arg_per_0 = -np.pi/2.0
 			self.semi_major_0=settings.ASTRONOMICAL_UNIT
 			self.m_init1_0 = 0.0
@@ -248,18 +255,17 @@ class BayesTDI():
 		See np.einsum docs for options if not calling get_einsum_path() here.
 		"""	
 
-		import settings
-		settings.init(self.data_file,self.f_s,self.number_n,self.cut_off,self.t_init,self.central_freq,self.f_min,self.f_max,self.tcb)  
-		from TDI_functions import nested_delay_application
-		from delay_time_dependence import time_dependence
-		from filter_functions import delay_polynomials
+		#import settings
+		#settings.init(self.data_file,self.f_s,self.number_n,self.cut_off,self.t_init,self.central_freq,self.f_min,self.f_max,self.tcb)  
+		from .utils.TDI_functions import nested_delay_application
+		from .utils.filter_functions import delay_polynomials
 		#Get optimal einsum path]
 		if self.orbit_model=='numerical':
-			from delay_time_dependence import time_dependence
+			from .utils.delay_time_dependence import time_dependence
 
 			orbital_L_3_p = time_dependence(self.m_init1_0,self.semi_major_0,self.eccentricity_0,self.inclination_0,self.omega_init_0,self.arg_per_0)
 		elif self.orbit_model=='keplerian':
-			from delay_time_dependence_Keplerian import time_dependence
+			from .utils.delay_time_dependence_Keplerian import time_dependence
 			orbital_L_3_p = time_dependence(self.m_init1_0,self.semi_major_0,self.arg_per_0)
 
 		nested = nested_delay_application(orbital_L_3_p,np.array([0,1]))

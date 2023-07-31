@@ -1,5 +1,5 @@
 import numpy as np
-import ..settings
+from .. import settings
 from lisaconstants import GM_SUN,c,ASTRONOMICAL_UNIT# Constant values set below to avoid importing lisaconstant
 
 
