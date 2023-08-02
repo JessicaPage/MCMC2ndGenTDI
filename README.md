@@ -23,7 +23,7 @@ If running numerical orbit model (18-parameter)  parameterization:
 ## Installation
 
 ```
-pip install MCMC2ndGenTDI
+pip install mcmc2ndgentdi
 ```
 
 ## Current version does not link to default data file that is included in package. Currently, you must download the repository zip file and put the data files in the directory you run your code from.
